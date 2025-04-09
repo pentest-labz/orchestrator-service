@@ -38,7 +38,7 @@ def read_root():
 def trigger_scanner():
     try:
         # In Docker Compose, we can use the service name to call the scanner-service.
-        scanner_url = "http://localhost:8001/scan"
+        scanner_url = "http://scanner:8001/scan"
         with httpx.Client(timeout=10) as client:
             response = client.get(scanner_url)
             return response.json()
