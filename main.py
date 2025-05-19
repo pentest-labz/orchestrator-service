@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, HTTPException, Header
+from fastapi import FastAPI, Depends, HTTPException, Body
 from fastapi.security import OAuth2PasswordBearer
 from fastapi.responses import JSONResponse
 import httpx
@@ -42,6 +42,40 @@ async def trigger_scan(target: str, scan_type: str, version: bool = False, ports
         return JSONResponse(status_code=exc.response.status_code, content={"scanner_error": exc.response.json()})
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to call scanner service: {e}")
+
+@app.post("/brute")
+async def orchestrate_brute_force(
+    body: dict = Body(..., description="JSON with target_url, username, form_fields, optional passwords"),
+    user=Depends(verify_token)
+):
+    brute_url = "http://brute:5002/brute"
+    try:
+        async with httpx.AsyncClient() as client:
+            resp = await client.post(brute_url, json=body)
+            resp.raise_for_status()
+            return resp.json()
+    except httpx.HTTPStatusError as exc:
+        return JSONResponse(status_code=exc.response.status_code, content={"brute_error": exc.response.json()})
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to call brute-force service: {e}")
+
+
+@app.post("/sqlinject")
+async def orchestrate_sql_injection(
+    body: dict = Body(..., description="JSON with target_url, optional method, params, payloads, detect_regex"),
+    user=Depends(verify_token)
+):
+    sql_url = "http://sql_injection:5003/sqlinject"
+    try:
+        async with httpx.AsyncClient() as client:
+            resp = await client.post(sql_url, json=body)
+            resp.raise_for_status()
+            return resp.json()
+    except httpx.HTTPStatusError as exc:
+        return JSONResponse(status_code=exc.response.status_code, content={"sql_error": exc.response.json()})
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to call SQL-injection service: {e}")
+
 
 @app.get("/health")
 async def health(user=Depends(verify_token)):
