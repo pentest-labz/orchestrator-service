@@ -26,7 +26,7 @@ async def verify_token(token: str = Depends(oauth2_scheme)):
 
 @app.get("/scan")
 async def trigger_scan(target: str, scan_type: str, version: bool = False, ports: str | None = None, user=Depends(verify_token)):
-    scanner_url = "http://scanner:8001/scan"
+    scanner_url = "http://scanner-service:8001/scan"
     params = {"target": target, "scan_type": scan_type, "version": str(version).lower()}
     if scan_type == "custom":
         if not ports:
@@ -48,7 +48,7 @@ async def orchestrate_brute_force(
     body: dict = Body(..., description="JSON with target_url, username, form_fields, optional passwords"),
     user=Depends(verify_token)
 ):
-    brute_url = "http://brute:5002/brute"
+    brute_url = "http://bruteforce-service:5002/brute"
     try:
         async with httpx.AsyncClient() as client:
             resp = await client.post(brute_url, json=body)
@@ -65,7 +65,7 @@ async def orchestrate_sql_injection(
     body: dict = Body(..., description="JSON with target_url, optional method, params, payloads, detect_regex"),
     user=Depends(verify_token)
 ):
-    sql_url = "http://sql_injection:5003/sqlinject"
+    sql_url = "http://sql-exploit-service:5003/sqlinject"
     try:
         async with httpx.AsyncClient() as client:
             resp = await client.post(sql_url, json=body)
