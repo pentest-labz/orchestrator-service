@@ -41,6 +41,14 @@ pipeline {
                 }
             }
         }
+
+        stage('Ansible Deployment') {
+            steps {
+                dir('ansiblev2') {
+                    sh 'ansible-playbook playbooks/redeploy.yml --vault-password-file ../vault_password.txt'
+                }
+            }
+        }
     }
 
     post {
